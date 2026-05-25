@@ -1,0 +1,9 @@
+out/
+cache/
+*.qcow2
+*.img
+*.iso
+*.log
+result
+result-*
+.DS_Store

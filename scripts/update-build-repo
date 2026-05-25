@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+workspace="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repo='https://github.com/ZimengXiong/basics-vm-nix.git'
+checkout="$workspace/basics-vm-nix"
+rev="$(git ls-remote "$repo" refs/heads/main | awk '{print $1}')"
+
+if [[ ! -d "$checkout/.git" ]]; then
+  git submodule update --init --recursive "$checkout"
+fi
+
+git -C "$checkout" fetch origin
+git -C "$checkout" checkout --detach "$rev"
+
+cat > "$workspace/build-repo.lock" <<LOCK
+repo=$repo
+rev=$rev
+LOCK
+
+echo "basics-vm-nix@$rev"

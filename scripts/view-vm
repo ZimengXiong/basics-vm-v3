@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+workspace="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$workspace/build-repo.lock"
+checkout="$workspace/basics-vm-nix"
+web_port="${BASICS_VIEW_WEB_PORT:-6080}"
+vnc_host="${BASICS_VIEW_VNC_HOST:-127.0.0.1}"
+vnc_port="${BASICS_VIEW_VNC_PORT:-5901}"
+
+mkdir -p "$workspace/cache"
+
+if [[ ! -d "$checkout" ]]; then
+  echo "Missing pinned submodule at $checkout." >&2
+  echo "Run: git submodule update --init --recursive v3/basics-vm-nix" >&2
+  exit 1
+fi
+
+actual_rev="$(git -C "$checkout" rev-parse HEAD)"
+if [[ "$actual_rev" != "$rev" ]]; then
+  echo "Pinned build repo mismatch." >&2
+  echo "Expected: $rev" >&2
+  echo "Actual:   $actual_rev" >&2
+  echo "Run: git submodule update --init --recursive v3/basics-vm-nix" >&2
+  exit 1
+fi
+
+novnc_path="$("$checkout/scripts/nix" eval --raw nixpkgs#novnc)"
+
+exec "$checkout/scripts/nix" shell nixpkgs#websockify nixpkgs#novnc --command websockify \
+  --web "$novnc_path/share/novnc" \
+  "0.0.0.0:${web_port}" \
+  "${vnc_host}:${vnc_port}"

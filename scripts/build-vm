@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+workspace="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$workspace/build-repo.lock"
+checkout="$workspace/basics-vm-nix"
+
+system="${1:-x86_64}"
+case "$system" in
+  x86_64) attr='nixosConfigurations.basics-x86_64.config.system.build.vm' ;;
+  aarch64|arm64) attr='nixosConfigurations.basics-aarch64.config.system.build.vm' ;;
+  *)
+    echo "usage: scripts/build-vm [x86_64|aarch64]" >&2
+    exit 2
+    ;;
+esac
+
+mkdir -p "$workspace/out"
+
+if [[ ! -d "$checkout" ]]; then
+  echo "Missing pinned submodule at $checkout." >&2
+  echo "Run: git submodule update --init --recursive v3/basics-vm-nix" >&2
+  exit 1
+fi
+
+actual_rev="$(git -C "$checkout" rev-parse HEAD)"
+if [[ "$actual_rev" != "$rev" ]]; then
+  echo "Pinned build repo mismatch." >&2
+  echo "Expected: $rev" >&2
+  echo "Actual:   $actual_rev" >&2
+  echo "Run: git submodule update --init --recursive v3/basics-vm-nix" >&2
+  exit 1
+fi
+
+"$checkout/scripts/nix" build ".#$attr" -o "$checkout/out/result-vm-$system"
+ln -sfnT "$checkout/out/result-vm-$system" "$workspace/out/result-vm-$system"

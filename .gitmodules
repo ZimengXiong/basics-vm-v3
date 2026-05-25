@@ -1,0 +1,3 @@
+[submodule "basics-vm-nix"]
+	path = basics-vm-nix
+	url = https://github.com/ZimengXiong/basics-vm-nix.git
