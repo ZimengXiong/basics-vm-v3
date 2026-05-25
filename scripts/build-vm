@@ -32,5 +32,8 @@ if [[ "$actual_rev" != "$rev" ]]; then
   exit 1
 fi
 
-"$checkout/scripts/nix" build ".#$attr" -o "$checkout/out/result-vm-$system"
+(
+  cd "$checkout"
+  ./scripts/nix build ".#$attr" -o "out/result-vm-$system"
+)
 ln -sfnT "$checkout/out/result-vm-$system" "$workspace/out/result-vm-$system"

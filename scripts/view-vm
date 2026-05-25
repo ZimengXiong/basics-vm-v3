@@ -25,9 +25,13 @@ if [[ "$actual_rev" != "$rev" ]]; then
   exit 1
 fi
 
-novnc_path="$("$checkout/scripts/nix" eval --raw nixpkgs#novnc)"
+novnc_path="$(
+  cd "$checkout"
+  ./scripts/nix eval --raw nixpkgs#novnc
+)"
 
-exec "$checkout/scripts/nix" shell nixpkgs#websockify nixpkgs#novnc --command websockify \
+cd "$checkout"
+exec ./scripts/nix shell nixpkgs#websockify nixpkgs#novnc --command websockify \
   --web "$novnc_path/share/novnc" \
   "0.0.0.0:${web_port}" \
   "${vnc_host}:${vnc_port}"
